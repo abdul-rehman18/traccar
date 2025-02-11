@@ -27,6 +27,6 @@ RUN mkdir -p /app/logs
 
 
 # Expose the port your application listens on (ensure this matches your app’s configuration)
-EXPOSE 8082
+EXPOSE 8083
 # Run the application
 CMD ["java", "-jar", "tracker-server.jar"]
