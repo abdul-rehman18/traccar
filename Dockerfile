@@ -10,13 +10,20 @@ COPY src ./src
 RUN ./gradlew build -x test
 
 # Stage 2: Create the runtime image using OpenJDK 17
-FROM openjdk:17-jre-slim
+FROM openjdk:17-slim
 WORKDIR /app
 # Copy the built jar from the target directory (update the filename if needed)
-COPY --from=build /app/target/traccar-server.jar ./traccar-server.jar
+COPY --from=build /app/target/tracker-server.jar ./tracker-server.jar
 # Copy the dependencies folder if your jar relies on external libs
 COPY --from=build /app/target/lib ./lib
+
+COPY setup/traccar.xml /app/setup/traccar.xml
+
+# Ensure logs directory exists
+RUN mkdir -p /app/logs
+
+
 # Expose the port your application listens on (ensure this matches your app’s configuration)
 EXPOSE 8082
 # Run the application
-CMD ["java", "-jar", "traccar-server.jar"]
+CMD ["java", "-jar", "tracker-server.jar"]
