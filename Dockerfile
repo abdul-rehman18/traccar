@@ -17,7 +17,10 @@ COPY --from=build /app/target/tracker-server.jar ./tracker-server.jar
 # Copy the dependencies folder if your jar relies on external libs
 COPY --from=build /app/target/lib ./lib
 
-COPY setup/traccar.xml /app/setup/traccar.xml
+COPY ./debug.xml /app/debug.xml
+
+COPY ./schema /app/schema
+
 
 # Ensure logs directory exists
 RUN mkdir -p /app/logs
