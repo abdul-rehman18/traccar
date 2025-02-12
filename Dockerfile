@@ -1,32 +1,21 @@
-# Stage 1: Build the application using Gradle with JDK 17
-FROM gradle:7.6.0-jdk17 AS build
-WORKDIR /app
-# Copy Gradle files and wrapper if available for consistency
-COPY build.gradle settings.gradle gradlew gradlew.bat ./
-COPY gradle ./gradle
-# Copy the source code
-COPY src ./src
-# Build the project (skip tests if desired)
-RUN ./gradlew build -x test
+FROM ubuntu:24.04
 
-# Stage 2: Create the runtime image using OpenJDK 17
-FROM openjdk:17-slim
-WORKDIR /app
-# Copy the built jar from the target directory (update the filename if needed)
-COPY --from=build /app/target/tracker-server.jar ./tracker-server.jar
-# Copy the dependencies folder if your jar relies on external libs
-COPY --from=build /app/target/lib ./lib
+ENV TRACCAR_VERSION=6.6
 
-COPY ./debug.xml /app/debug.xml
+WORKDIR /opt/traccar
 
-COPY ./schema /app/schema
+RUN set -ex; \
+    apt-get update; \
+    TERM=xterm DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
+      openjdk-17-jre-headless \
+      unzip \
+      wget; \
+    wget -qO /tmp/traccar.zip https://github.com/traccar/traccar/releases/download/v$TRACCAR_VERSION/traccar-other-$TRACCAR_VERSION.zip; \
+    unzip -qo /tmp/traccar.zip -d /opt/traccar; \
+    apt-get autoremove --yes unzip wget; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/* /tmp/*
 
+ENTRYPOINT ["java", "-Xms1g", "-Xmx1g", "-Djava.net.preferIPv4Stack=true"]
 
-# Ensure logs directory exists
-RUN mkdir -p /app/logs
-
-
-# Expose the port your application listens on (ensure this matches your app’s configuration)
-EXPOSE 8083
-# Run the application
-CMD ["java", "-jar", "tracker-server.jar"]
+CMD ["-jar", "tracker-server.jar", "conf/traccar.xml"]
